@@ -44,6 +44,9 @@ class _LoginViewState extends State<LoginView> {
               showTopRightSnackBar(context, state.message, state.notifyType);
             });
           }
+          if(state is LoginSuccess) {
+            appRouter.go("/");
+          }
           return Scaffold(
             body: LayoutBuilder(
                 builder: (BuildContext context, BoxConstraints constraints) {

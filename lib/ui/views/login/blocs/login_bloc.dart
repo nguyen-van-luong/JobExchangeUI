@@ -45,7 +45,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         String? token = await FirebaseMessaging.instance.getToken();
         if(token != null)
           await _fcmRepository.create(token: token);
-        appRouter.go("/");
+        emit(LoginSuccess());
       }).catchError((error) {
         print(error);
         String message = getMessageFromException(error);
