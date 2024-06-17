@@ -16,8 +16,8 @@ class LoadEvent extends CVEvent {
   final int? salaryFrom;
   final int? salaryTo;
   final String? workingForm;
-  final bool? isPropose;
-  final String page;
+  final String? propose;
+  final int? page;
 
   const LoadEvent({required this.searchContent,
     required this.industry,
@@ -26,9 +26,9 @@ class LoadEvent extends CVEvent {
     required this.workingForm,
     required this.salaryTo,
     required this.salaryFrom,
-    required this.isPropose,
+    required this.propose,
     required this.page});
 
   @override
-  List<Object?> get props => [searchContent, industry, province, experience, workingForm, salaryTo, salaryFrom, isPropose, page];
+  List<Object?> get props => [searchContent, industry, province, experience, workingForm, salaryTo, salaryFrom, propose, page];
 }

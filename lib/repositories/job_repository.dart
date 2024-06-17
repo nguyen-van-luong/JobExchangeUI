@@ -99,10 +99,31 @@ class JobRepository {
         '/propose?$param');
   }
 
+  Future<Response<dynamic>> proposeForCV({
+    required int cvId,
+    required int page,
+    int? limit}) async {
+    String param = '';
+    param += 'page=$page&limit=${limit ?? pageSize}';
+    return dio.get(
+        '/propose/$cvId?$param');
+  }
+
+  Future<Response<dynamic>> findByEmployerId({required String employerId}) async {
+
+    return dio.get('/find/$employerId');
+  }
+
   Future<Response<dynamic>> deleteList({required List<int> ids}) async {
     dio = JwtInterceptor().addInterceptors(dio);
 
-    return dio.delete("/delete", data: jsonEncode(ids));
+    return dio.delete("/deletes", data: jsonEncode(ids));
+  }
+
+  Future<Response<dynamic>> delete({required int id}) async {
+    dio = JwtInterceptor().addInterceptors(dio);
+
+    return dio.delete("/delete", data: jsonEncode(id));
   }
 
   Future<Response<dynamic>> updatePrivate({required int id, required bool isPrivate}) async {

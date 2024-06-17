@@ -16,3 +16,12 @@ class LoadEvent extends CVDetailEvent {
   @override
   List<Object?> get props => [id];
 }
+
+class DeleteEvent extends CVDetailEvent {
+  final int id;
+
+  const DeleteEvent({required this.id});
+
+  @override
+  List<Object?> get props => [id];
+}

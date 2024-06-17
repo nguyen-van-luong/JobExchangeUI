@@ -1,20 +1,18 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:untitled1/dtos/jwt_payload.dart';
 import 'package:untitled1/ui/router.dart';
 
-import '../../../../repositories/job_repository.dart';
 import '../../../widgets/header/right_header.dart';
 
-class MenuAction extends StatefulWidget {
+class MenuCVAction extends StatefulWidget {
   final int? id;
-  const MenuAction({super.key, required this.id});
+  const MenuCVAction({super.key, required this.id});
 
   @override
-  State<MenuAction> createState() => _MenuActionState();
+  State<MenuCVAction> createState() => _MenuCVActionState();
 }
 
-class _MenuActionState extends State<MenuAction> {
+class _MenuCVActionState extends State<MenuCVAction> {
 
   late List<ItemMenu> acthorMenu;
 
@@ -25,8 +23,8 @@ class _MenuActionState extends State<MenuAction> {
   @override
   Widget build(BuildContext context) {
     acthorMenu = [
-      ItemMenu(name: "Sửa", icon: Icons.edit, route: "/cu_job/id=${widget.id}"),
-      ItemMenu(name: "xóa", icon: Icons.delete, route: "/delete_job/id=${widget.id}")
+      ItemMenu(name: "Sửa", icon: Icons.edit, route: "/cu_cv/id=${widget.id}"),
+      ItemMenu(name: "xóa", icon: Icons.delete, route: "/delete_cv/id=${widget.id}")
     ];
     return MenuAnchor(
       builder: (BuildContext context, MenuController controller,

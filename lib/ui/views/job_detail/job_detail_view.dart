@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:untitled1/dtos/jwt_payload.dart';
+import 'package:untitled1/dtos/notify_type.dart';
 import 'package:untitled1/models/address.dart';
 import 'package:untitled1/models/job.dart';
 import 'package:untitled1/ui/views/job_detail/blocs/job_detail_bloc.dart';
@@ -210,7 +212,15 @@ class _JobDetailState extends State<JobDetailView> {
                             style: TextButton.styleFrom(
                               foregroundColor: Colors.white, backgroundColor: Color.fromARGB(255, 0, 86, 143),  // This is the button color
                             ),
-                            onPressed: () { _showMyDialog(context, state); },
+                            onPressed: () {
+                              if (JwtPayload.role != "ROLE_student")
+                                return showTopRightSnackBar(context, "Cần đăng nhập tài khoản sinh viên", NotifyType.info);
+                              int comparison = state.job.duration.compareTo(DateTime.now());
+                              if (comparison < 0)
+                                showTopRightSnackBar(context, "Đã hết hạn nộp hồ sơ", NotifyType.info);
+                              else
+                                _showMyDialog(context, state);
+                            },
                             child: const Padding(
                                 padding: EdgeInsets.all(8),
                                 child: Text("Nộp hồ sơ",
@@ -233,10 +243,11 @@ class _JobDetailState extends State<JobDetailView> {
               right: 0,
               child: Column(
                 children: [
-                  Tooltip(
-                    message: "Hiển thị các hành động",
-                    child: MenuAction(id: state.job.id),
-                  ),
+                  (JwtPayload.role != "ROLE_employer" || JwtPayload.userId != state.job.employer.id) ? Container() :
+                    Tooltip(
+                      message: "Hiển thị các hành động",
+                      child: MenuAction(id: state.job.id),
+                    ),
                   SizedBox(height: 4,),
                   Tooltip(
                     message: "Bookmark",
@@ -246,7 +257,11 @@ class _JobDetailState extends State<JobDetailView> {
                         color: state.isBookmark ? Colors.blueAccent : Color.fromARGB(255, 212, 211, 211),
                         size: 32,
                       ),
-                      onPressed: () => _bloc.add(BookmarkEvent(data: state,isBookmark:  !state.isBookmark)),
+                      onPressed: () {
+                        if (JwtPayload.role != "ROLE_student")
+                          return showTopRightSnackBar(context, "Cần đăng nhập tài khoản sinh viên", NotifyType.info);
+                        _bloc.add(BookmarkEvent(data: state,isBookmark:  !state.isBookmark));
+                      },
                     ),
                   ),
                 ],
@@ -353,7 +368,7 @@ class _JobDetailState extends State<JobDetailView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    textHeader("Đại chỉ"),
+                    textHeader("Địa chỉ"),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -467,7 +482,6 @@ class _JobDetailState extends State<JobDetailView> {
   }
 
   Future<void> _showMyDialog(BuildContext context, LoadSuccess state) async {
-    bool chooseTooMuch = false;
     return showDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -485,12 +499,6 @@ class _JobDetailState extends State<JobDetailView> {
                       padding: EdgeInsets.only(top: 10, bottom: 4),
                       child: Text("Hồ sơ ứng tuyển:"),
                     ),
-                    chooseTooMuch ? Container(
-                      alignment: Alignment.center,
-                      width: 600,
-                      padding: EdgeInsets.only(top: 4, bottom: 4),
-                      child: Text("Không thể chọn quá 3 hồ sơ!", style: TextStyle(color: Colors.redAccent),),
-                    ) : Container(),
                     Container(
                       alignment: Alignment.center,
                       width: 600,
@@ -505,8 +513,10 @@ class _JobDetailState extends State<JobDetailView> {
                         children: [
                           Text("Danh sách hồ sơ"),
                           TextButton(
-                              onPressed: (){},
-                              child: Text("Thêm hồ sơ", style: TextStyle(color: Colors.indigoAccent),)
+                              onPressed: (){
+                                appRouter.go("/cu_cv");
+                              },
+                              child: Text("Thêm hồ sơ", style: TextStyle(color: Colors.indigoAccent), )
                           )
                         ],
                       ),
@@ -522,7 +532,7 @@ class _JobDetailState extends State<JobDetailView> {
                             if(state.cvApplications.any((element) => element.id == cv.id))
                               Container()
                             else
-                              buildCV(cv, buildButtonAdd(cv, state.cvApplications, setState, chooseTooMuch)),
+                              buildCV(cv, buildButtonChoose(cv, state.cvApplications, setState)),
                         ],
                       ),
                     )
@@ -651,18 +661,15 @@ class _JobDetailState extends State<JobDetailView> {
     );
   }
 
-  TextButton buildButtonAdd(cv, List<CV> cvApplications, StateSetter setState, bool chooseTooMuch) {
+  TextButton buildButtonChoose(CV cv, List<CV> cvApplications, StateSetter setState) {
     return TextButton(
       style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(Color.fromARGB(255, 0, 86, 143)) ),
       onPressed: () {
         setState(() {
-          if(cvApplications.length == 3)
-            chooseTooMuch = true;
-          else
-            cvApplications.add(cv);
+          cvApplications.insert(0, cv);
         });
       },
-      child: Text("Thêm", style: TextStyle(color: Colors.white),),
+      child: Text("Chọn", style: TextStyle(color: Colors.white),),
     );
   }
 
@@ -674,7 +681,7 @@ class _JobDetailState extends State<JobDetailView> {
           cvApplications.removeAt(cv.key);
         });
       },
-      child: Text("Hũy", style: TextStyle(color: Colors.white),),
+      child: Text("Hủy", style: TextStyle(color: Colors.white),),
     );
   }
 }

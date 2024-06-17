@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:untitled1/ui/views/cv_detail/blocs/cv_detail_bloc.dart';
 import 'package:untitled1/ui/views/cv_detail/widgets/cv_body.dart';
+import 'package:untitled1/ui/views/cv_detail/widgets/menu_action.dart';
 
+import '../../../dtos/jwt_payload.dart';
 import '../../common/utils/date_time.dart';
 import '../../widgets/notification.dart';
 import '../../widgets/user_avatar.dart';
@@ -97,7 +99,7 @@ class _CVDetailView extends State<CVDetailView> {
                     child: ClipRRect(
                         borderRadius: BorderRadius.circular(50),
                         child: UserAvatar(
-                          imageUrl: state.cv.avatar,
+                          imageUrl: state.cv.student.avatarUrl,
                           size: 124,
                         )),
                   ),
@@ -172,21 +174,15 @@ class _CVDetailView extends State<CVDetailView> {
                 )
               ],
             ),
-            // Positioned(
-            //   top: 0,
-            //   right: 0,
-            //   child: Tooltip(
-            //     message: "Bookmark",
-            //     child: IconButton(
-            //       icon: Icon(
-            //         Icons.bookmark, // Mã Unicode của biểu tượng con mắt
-            //         color: state.isBookmark ? Colors.blueAccent : Color.fromARGB(255, 212, 211, 211),
-            //         size: 32,
-            //       ),
-            //       onPressed: () => _bloc.add(BookmarkEvent(data: state,isBookmark:  !state.isBookmark)),
-            //     ),
-            //   ),
-            // )
+            Positioned(
+              top: 0,
+              right: 0,
+              child: (JwtPayload.role != "ROLE_student" || JwtPayload.userId != state.cv.student.id) ? Container() :
+              Tooltip(
+                message: "Hiển thị các hành động",
+                child: MenuCVAction(id: state.cv.id),
+              ),
+            )
           ],
         )
     );

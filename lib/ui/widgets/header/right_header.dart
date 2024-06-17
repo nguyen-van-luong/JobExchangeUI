@@ -111,7 +111,10 @@ class _RightHeaderState extends State<RightHeader> {
             IconButton(
               icon: Icon(Icons.notifications),
               onPressed: () {
-                Provider.of<GlobalVariableModel>(context, listen: false).hasMessage = false;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  Provider.of<GlobalVariableModel>(context, listen: false).hasMessage = false;
+                });
+
                 appRouter.go("/employer_notification");
                 // Xử lý sự kiện khi nhấn vào icon
               },

@@ -275,7 +275,7 @@ Widget buildItemCVRow(CV itemOne, CV? itemTow, [bool isBorder = false]) {
         child: CVFeedItem(cv: itemOne, isBorder: isBorder),
       ),
       Expanded(
-        child: itemTow != null ? CVFeedItem(cv: itemOne, isBorder: isBorder) : Container(),
+        child: itemTow != null ? CVFeedItem(cv: itemTow, isBorder: isBorder) : Container(),
       )
     ],
   );

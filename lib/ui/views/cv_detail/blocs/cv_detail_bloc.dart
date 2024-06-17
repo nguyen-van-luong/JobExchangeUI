@@ -15,6 +15,7 @@ class CVDetailBloc extends Bloc<CVDetailEvent, CVDetailState> {
 
   CVDetailBloc() : super(CVInitialState()) {
     on<LoadEvent>(_onLoad);
+    on<DeleteEvent>(_onDelete);
   }
 
   Future<void> _onLoad(
@@ -24,6 +25,17 @@ class CVDetailBloc extends Bloc<CVDetailEvent, CVDetailState> {
 
       CV cv = CV.fromJson(response.data);
       emit(LoadSuccess(cv: cv));
+    } catch (error) {
+      String message = "Có lỗi xảy ra. Vui lòng thử lại sau!";
+      emit(Message(message: message, notifyType: NotifyType.error));
+    }
+  }
+
+  Future<void> _onDelete(
+      DeleteEvent event, Emitter<CVDetailState> emit) async {
+    try {
+      await _cvRepository.delete(id: event.id);
+      emit(Message(message: "Đã xóa thành công", notifyType: NotifyType.success));
     } catch (error) {
       String message = "Có lỗi xảy ra. Vui lòng thử lại sau!";
       emit(Message(message: message, notifyType: NotifyType.error));

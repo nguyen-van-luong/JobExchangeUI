@@ -57,6 +57,7 @@ class _StudentManageViewState extends State<StudentManageView> {
               _birthdayController.text = state.student.birthday != null
                   ? DateFormat("yyyy-MM-dd").format(state.student.birthday!)
                   : '';
+              print(_birthdayController.text);
               if(state.student.gender == null)
                 sexSelected = 'Trống';
               else if (state.student.gender!) {

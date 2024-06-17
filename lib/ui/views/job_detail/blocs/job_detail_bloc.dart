@@ -26,6 +26,7 @@ class JobDetailBloc extends Bloc<JobDetailEvent, JobDetailState> {
     on<LoadEvent>(_onLoad);
     on<BookmarkEvent>(_onBookmark);
     on<ApplicationEvent>(_onApplication);
+    on<DeleteEvent>(_onDelete);
   }
 
   Future<void> _onLoad(
@@ -92,6 +93,17 @@ class JobDetailBloc extends Bloc<JobDetailEvent, JobDetailState> {
       String message = "Có lỗi xảy ra. Vui lòng thử lại sau!";
       Message loadFailure =  Message(message: message, notifyType: NotifyType.error);
       emit(LoadSuccess(job: event.data.job, isBookmark: event.data.isBookmark, cvs: event.data.cvs, cvApplications: event.data.cvApplications, message: loadFailure));
+    }
+  }
+
+  Future<void> _onDelete(
+      DeleteEvent event, Emitter<JobDetailState> emit) async {
+    try {
+      await _jobRepository.delete(id: event.id);
+      emit(Message(message: "Đã xóa thành công", notifyType: NotifyType.success));
+    } catch (error) {
+      String message = "Có lỗi xảy ra. Vui lòng thử lại sau!";
+      emit(Message(message: message, notifyType: NotifyType.error));
     }
   }
 }

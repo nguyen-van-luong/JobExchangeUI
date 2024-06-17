@@ -7,12 +7,14 @@ import 'package:untitled1/dtos/jwt_payload.dart';
 import 'package:untitled1/ui/views/CV/cv_view.dart';
 import 'package:untitled1/ui/views/admin/admin_view.dart';
 import 'package:untitled1/ui/views/cv_detail/cv_detail_view.dart';
+import 'package:untitled1/ui/views/cv_detail/widgets/cv_delete.dart';
 import 'package:untitled1/ui/views/employer/employer_view.dart';
 import 'package:untitled1/ui/views/employer_detail/employer_detail_view.dart';
 import 'package:untitled1/ui/views/employers/employers_view.dart';
 import 'package:untitled1/ui/views/home/home_view.dart';
 import 'package:untitled1/ui/views/job/job_view.dart';
 import 'package:untitled1/ui/views/job_detail/job_detail_view.dart';
+import 'package:untitled1/ui/views/job_detail/widgets/job_delete.dart';
 import 'package:untitled1/ui/views/login/login_view.dart';
 import 'package:untitled1/ui/views/logout/logout_view.dart';
 import 'package:untitled1/ui/views/register/register_employer_view.dart';
@@ -502,6 +504,28 @@ final appRouter = GoRouter(
                 params: convertQuery(
                     query: state.pathParameters["query"] ?? ""),
               ),
+            ));
+      },
+      redirect: StudentMiddleware().redirect,
+    ),
+    GoRoute(
+      path: '/delete_job/:pid',
+      pageBuilder: (context, state) {
+        return MaterialPage<void>(
+            key: ValueKey('delete_job'),
+            child: ScreenWithHeaderAndFooter(
+                body: JobDeleteView(id: state.pathParameters['pid']!)
+            ));
+      },
+      redirect: EmployerMiddleware().redirect,
+    ),
+    GoRoute(
+      path: '/delete_cv/:pid',
+      pageBuilder: (context, state) {
+        return MaterialPage<void>(
+            key: ValueKey('delete_cv'),
+            child: ScreenWithHeaderAndFooter(
+                body: CVDeleteView(id: state.pathParameters['pid']!)
             ));
       },
       redirect: StudentMiddleware().redirect,

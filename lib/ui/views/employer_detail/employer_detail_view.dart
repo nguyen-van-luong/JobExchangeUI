@@ -5,6 +5,8 @@ import 'package:untitled1/ui/views/employer_detail/widgets/info_view.dart';
 import 'package:untitled1/ui/views/employer_detail/widgets/job_view.dart';
 import 'package:untitled1/ui/views/employer_detail/widgets/menu.dart';
 
+import '../../../dtos/jwt_payload.dart';
+import '../../../dtos/notify_type.dart';
 import '../../common/utils/navigation.dart';
 import '../../widgets/notification.dart';
 import '../../widgets/user_avatar.dart';
@@ -167,7 +169,11 @@ class _EmployerDetailState extends State<EmployerDetailView> {
                   ),
                   backgroundColor: Colors.white,
                 ),
-                onPressed: () => _bloc.add(FollowEvent(data: state, isFollow:  !state.isFollow)),
+                onPressed: () {
+                  if (JwtPayload.role != "ROLE_student")
+                    return showTopRightSnackBar(context, "Cần đăng nhập tài khoản sinh viên", NotifyType.info);
+                  _bloc.add(FollowEvent(data: state, isFollow:  !state.isFollow));
+                },
                 child: state.isFollow ? Text('Hũy theo dõi', style: TextStyle(fontSize: 16)) :
                 Text('Theo dõi', style: TextStyle(fontSize: 16),),
               ),

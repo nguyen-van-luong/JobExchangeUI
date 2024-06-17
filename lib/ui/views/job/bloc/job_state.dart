@@ -14,11 +14,12 @@ class LoadSuccess extends JobState {
   final ResultCount<Job> result;
   final List<Industry> industries;
   final List<Province> provinces;
+  final List<CV> cvs;
 
-  LoadSuccess({required this.result, required this.industries, required this.provinces});
+  LoadSuccess({required this.result, required this.industries, required this.provinces, required this.cvs});
 
   @override
-  List<Object?> get props => [result, industries, provinces];
+  List<Object?> get props => [result, industries, provinces, cvs];
 }
 
 class LoadFailure extends JobState {

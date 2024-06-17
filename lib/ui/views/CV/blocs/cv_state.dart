@@ -14,11 +14,12 @@ class LoadSuccess extends CVState {
   final ResultCount<CV> result;
   final List<Industry> industries;
   final List<Province> provinces;
+  final List<Job> jobs;
 
-  LoadSuccess({required this.result, required this.industries, required this.provinces});
+  LoadSuccess({required this.result, required this.industries, required this.provinces, required this.jobs});
 
   @override
-  List<Object?> get props => [result, industries, provinces];
+  List<Object?> get props => [result, industries, provinces, jobs];
 }
 
 class LoadFailure extends CVState {

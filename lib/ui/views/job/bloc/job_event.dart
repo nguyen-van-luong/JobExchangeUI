@@ -19,7 +19,7 @@ class LoadEvent extends JobEvent {
   final int? ageTo;
   final String? degree;
   final String? workingForm;
-  final bool? isPropose;
+  final String? propose;
   final int? page;
 
   const LoadEvent({required this.searchContent,
@@ -32,10 +32,10 @@ class LoadEvent extends JobEvent {
     required this.salaryTo,
     required this.salaryFrom,
     required this.degree,
-    required this.isPropose,
+    required this.propose,
     required this.page});
 
   @override
-  List<Object?> get props => [searchContent, industry, province, experience, isPropose,
+  List<Object?> get props => [searchContent, industry, province, experience, propose,
     workingForm, ageTo, ageFrom, salaryTo, salaryFrom, degree, page];
 }

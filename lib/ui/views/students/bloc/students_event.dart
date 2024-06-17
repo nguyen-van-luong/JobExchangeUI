@@ -9,12 +9,14 @@ sealed class StudentsEvent extends Equatable {
 }
 
 class LoadEvent extends StudentsEvent {
-  final String searchContent;
+  final String? industry;
+  final String? province;
   final int? page;
 
-  const LoadEvent({required this.searchContent,
+  const LoadEvent({required this.industry,
+    required this.province,
     required this.page});
 
   @override
-  List<Object?> get props => [searchContent, page];
+  List<Object?> get props => [industry, province, page];
 }

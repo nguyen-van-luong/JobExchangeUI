@@ -74,7 +74,10 @@ class _CUJobViewState extends State<CUJobView> {
   @override
   void initState() {
     super.initState();
-    _bloc = CUJobBloc();
+    _bloc = CUJobBloc()
+      ..add(LoadEvent(
+          id: int.tryParse(widget.params['id'] ?? '')
+      ));
   }
 
   @override

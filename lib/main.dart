@@ -42,11 +42,18 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     _loadJwtFuture = loadJwt();
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      RemoteNotification? notification = message.notification;
-      if (notification != null) {
-        Provider.of<GlobalVariableModel>(context, listen: false).hasMessage = true;
-        await player.setAsset('/notification_sound.mp3');
-        player.play();
+      try {
+        RemoteNotification? notification = message.notification;
+        if (notification != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Provider.of<GlobalVariableModel>(context, listen: false).hasMessage = true;
+          });
+
+          await player.setAsset('/notification_sound.mp3');
+          player.play();
+        }
+      } catch (e) {
+        print(e);
       }
     });
   }

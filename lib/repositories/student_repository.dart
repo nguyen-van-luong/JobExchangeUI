@@ -25,12 +25,17 @@ class StudentRepository {
   }
 
   Future<Response<dynamic>> getSearch({
-    required String? searchContent,
+    required String? industry,
+    required String? province,
     required int page,
     int? limit}) async {
     String param = "";
-    if(searchContent != null && searchContent.isNotEmpty)
-      param += "searchContent=$searchContent&";
+    if(industry != null && industry.isNotEmpty)
+      param += "&industry=$industry";
+    if(province != null && province.isNotEmpty)
+      param += "&province=$province";
+    if(param.isNotEmpty)
+      param += "&";
 
     return dio.get(
         '/search?${param}page=$page&limit=${limit ?? 20}');

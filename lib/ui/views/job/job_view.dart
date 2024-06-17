@@ -6,12 +6,17 @@ import 'package:untitled1/models/province.dart';
 import 'package:untitled1/ui/common/utils/widget.dart';
 import 'package:untitled1/ui/views/job/bloc/job_bloc.dart';
 
+import '../../../dtos/jwt_payload.dart';
+import '../../../dtos/notify_type.dart';
+import '../../../models/cv.dart';
 import '../../../models/industry.dart';
 import '../../../models/job.dart';
+import '../../common/utils/date_time.dart';
 import '../../router.dart';
 import '../../widgets/industry_drop_down.dart';
 import '../../widgets/notification.dart';
 import '../../widgets/pagination.dart';
+import '../../widgets/user_avatar.dart';
 
 class JobView extends StatefulWidget {
 
@@ -39,7 +44,9 @@ class _JobViewState extends State<JobView> {
   Industry? industrySelected = null;
   Industry? industryTem = null;
   late String? indsutryName;
-  late String provinceName;
+  late String? provinceName;
+  late CV? cvSelected;
+  int? propose = null;
 
   final List<String> degrees = ["trống","Trên đại học", "Đại học", "Cao đẳng", "Trung cấp", "Trung học", "Chứng chỉ", "Không yêu cầu"];
   final List<String> experiences = ["trống","Chưa có kinh nghiệm", "Dưới 1 năm", "1 năm", "2 năm", "3 năm", "4 năm", "5 năm", "Trên 5 năm"];
@@ -60,7 +67,7 @@ class _JobViewState extends State<JobView> {
         salaryFrom: int.tryParse(widget.params['salaryFrom'] ?? ''),
         salaryTo: int.tryParse(widget.params['salaryTo'] ?? ''),
         degree: widget.params['degree'],
-        isPropose: bool.tryParse(widget.params['propose'] ?? 'false'),
+        propose: widget.params['propose'],
         workingForm: widget.params['workingForm'],
       ));
   }
@@ -79,7 +86,7 @@ class _JobViewState extends State<JobView> {
         salaryFrom: int.tryParse(widget.params['salaryFrom'] ?? ''),
         salaryTo: int.tryParse(widget.params['salaryTo'] ?? ''),
         degree: widget.params['degree'],
-        isPropose: bool.tryParse(widget.params['propose'] ?? 'false'),
+        propose: widget.params['propose'],
         workingForm: widget.params['workingForm']
     ));
   }
@@ -111,6 +118,10 @@ class _JobViewState extends State<JobView> {
             _salaryToController.text = widget.params['salaryTo'] ?? '';
             degreeSelected = widget.params['degree'];
             workingFormSelected = widget.params['workingForm'];
+            String? proposeTem =  widget.params['propose'];
+            if(proposeTem != null) {
+              propose = int.tryParse(proposeTem);
+            }
           }
         },
         child: BlocBuilder<JobBloc, JobState>(
@@ -120,6 +131,18 @@ class _JobViewState extends State<JobView> {
                 industrySelected = state.industries.firstWhere((element) => element.name == indsutryName);
               } catch(e) {
                 industrySelected = null;
+              }
+
+              try {
+                provinceSelected = state.provinces.firstWhere((element) => element.name == provinceName);
+              } catch(e) {
+                provinceSelected = null;
+              }
+
+              try {
+                cvSelected = state.cvs.firstWhere((element) => element.id == propose);
+              } catch(e) {
+                cvSelected = null;
               }
 
               return Align(
@@ -185,7 +208,9 @@ class _JobViewState extends State<JobView> {
                 provinceSelected,
                 "Lọc theo tỉnh/thành phố",
                 (value) => null,
-                (province) {provinceSelected = province;}
+                (province) {
+                  provinceName = province == null ? null : province?.name;
+                }
             ),
           ),
           Container(
@@ -245,7 +270,9 @@ class _JobViewState extends State<JobView> {
                 ),
               ),
               onPressed: () {
-                appRouter.go('/viewsearch/propose=true');
+                if (JwtPayload.role != "ROLE_student")
+                  return showTopRightSnackBar(context, "Cần đăng nhập tài khoản sinh viên", NotifyType.info);
+                _showMyDialog(context, state);
               },
               child: const Text("Đề xuất",
                   style: TextStyle(color: Colors.white, fontSize: 18),
@@ -436,11 +463,213 @@ class _JobViewState extends State<JobView> {
     );
   }
 
+  Future<void> _showMyDialog(BuildContext context, LoadSuccess state) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              content:  SingleChildScrollView(
+                child: ListBody(
+                  children: <Widget>[
+                    Text("Đề xuất", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10, bottom: 4),
+                      child: Text("Hồ sơ được chọn:"),
+                    ),
+                    Container(
+                      alignment: Alignment.center,
+                      width: 600,
+                      padding: EdgeInsets.only(bottom: 10),
+                      child: buildCVChooie(setState),
+                    ),
+                    Container(height: 1,width: 600, color: Colors.blueAccent,),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10, bottom: 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text("Danh sách hồ sơ"),
+                          TextButton(
+                              onPressed: (){
+                                appRouter.go("/cu_cv");
+                              },
+                              child: Text("Thêm hồ sơ", style: TextStyle(color: Colors.indigoAccent), )
+                          )
+                        ],
+                      ),
+                    ),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: 600,
+                        maxHeight: 300,
+                      ),
+                      child: Column(
+                        children: [
+                          for(CV cv in state.cvs)
+                            if(cv.id == cvSelected?.id)
+                              Container()
+                            else
+                              buildCV(cv, buildButtonChoose(cv, setState)),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white, backgroundColor: Color.fromARGB(255, 0, 86, 143),  // This is the button color
+                  ),
+                  onPressed: () {
+                    if(cvSelected == null) {
+                      appRouter.go("/viewsearch");
+                    } else {
+                      appRouter.go("/viewsearch/propose=${cvSelected?.id}");
+                    }
+                    Navigator.of(context).pop();},
+                  child: const Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Text("Xác nhận",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20
+                        ),)
+                  ),
+
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget buildCVChooie(StateSetter setState) {
+    if(cvSelected == null)
+      return Text("Vui long chọn hồ sơ để đề xuất",
+        style: TextStyle(color: Colors.black45),);
+    return buildCV(cvSelected!, buildButtonRemove(setState));
+  }
+
   Future<void> selectIndustry(Industry? industry) async {
     indsutryName = industry == null ? null : industry.name;
 
     setState(() {
     });
+  }
+
+  Widget buildCV(CV cv, TextButton button) {
+    return Container(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 450),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                InkWell(
+                  onTap: () => null,
+                  child: ClipRRect(
+                      borderRadius: BorderRadius.circular(50),
+                      child: UserAvatar(
+                        imageUrl: cv.student!.avatarUrl,
+                        size: 40,
+                      )),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              InkWell(
+                                onTap: () => null,
+                                child: Text(
+                                  cv.student.fullname,
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w300,
+                                      color: Colors.indigo[700]),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                getTimeAgo(cv.updatedAt),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[700],
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.only(top: 2, bottom: 4),
+                        child: InkWell(
+                          onTap: () => null,
+                          hoverColor: Colors.black12,
+                          child: Text(
+                            cv.positionWant,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black87,
+                            ),
+                            softWrap: true,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ),
+
+          SizedBox(
+            width: 100,
+            child: button,
+          )
+        ],
+      ),
+    );
+  }
+
+  TextButton buildButtonChoose(CV cv, StateSetter setState) {
+    return TextButton(
+      style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(Color.fromARGB(255, 0, 86, 143)) ),
+      onPressed: () {
+        setState(() {
+          cvSelected = cv;
+        });
+      },
+      child: Text("Chọn", style: TextStyle(color: Colors.white),),
+    );
+  }
+
+  TextButton buildButtonRemove(StateSetter setState) {
+    return TextButton(
+      style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(Colors.redAccent) ),
+      onPressed: () {
+        setState(() {
+          cvSelected = null;
+        });
+      },
+      child: Text("Hủy", style: TextStyle(color: Colors.white),),
+    );
   }
 
   String getSearchQuery({
@@ -456,10 +685,10 @@ class _JobViewState extends State<JobView> {
     String? degree,
     String? workingForm}) {
     String param = '';
-    if(industry != null && industry.isNotEmpty && industry != 'trống') {
+    if(industry != null && industry.isNotEmpty && industry != 'Trống') {
       param += '&industry=$industry';
     }
-    if(province != null && province.isNotEmpty && province != 'trống') {
+    if(province != null && province.isNotEmpty && province != 'Trống') {
       param += '&province=$province';
     }
     if(ageFrom != null && ageFrom.isNotEmpty && ageFrom != 'trống') {

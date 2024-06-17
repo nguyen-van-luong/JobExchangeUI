@@ -4,13 +4,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:untitled1/models/industry.dart';
 import 'package:untitled1/ui/views/CV/blocs/cv_bloc.dart';
 
+import '../../../dtos/jwt_payload.dart';
+import '../../../dtos/notify_type.dart';
 import '../../../models/cv.dart';
+import '../../../models/job.dart';
 import '../../../models/province.dart';
+import '../../common/utils/date_time.dart';
 import '../../common/utils/widget.dart';
 import '../../router.dart';
 import '../../widgets/industry_drop_down.dart';
 import '../../widgets/notification.dart';
 import '../../widgets/pagination.dart';
+import '../../widgets/user_avatar.dart';
 
 class CVView extends StatefulWidget {
   const CVView({super.key, required this.params});
@@ -35,7 +40,9 @@ class _CVViewState extends State<CVView> {
   Industry? industrySelected = null;
   Industry? industryTem = null;
   late String? indsutryName;
-  late String provinceName;
+  late String? provinceName;
+  late Job? jobSelected;
+  int? propose = null;
 
   final List<String> degrees = ["trống","Trên đại học", "Đại học", "Cao đẳng", "Trung cấp", "Trung học", "Chứng chỉ", "Không yêu cầu"];
   final List<String> experiences = ["trống","Chưa có kinh nghiệm", "Dưới 1 năm", "1 năm", "2 năm", "3 năm", "4 năm", "5 năm", "Trên 5 năm"];
@@ -46,14 +53,14 @@ class _CVViewState extends State<CVView> {
     super.initState();
     _bloc = CVBloc()
       ..add(LoadEvent(
-          page: widget.params['page'] ?? '1',
+          page: int.tryParse(widget.params['page'] ?? '1'),
           searchContent: widget.params['q'] ?? '',
           province: widget.params['province'],
           industry: widget.params['industry'],
           experience: widget.params['experience'],
           salaryFrom: int.tryParse(widget.params['salaryFrom'] ?? ''),
           salaryTo: int.tryParse(widget.params['salaryTo'] ?? ''),
-          isPropose: bool.tryParse(widget.params['propose'] ?? 'false'),
+          propose: widget.params['propose'],
           workingForm: widget.params['workingForm']
       ));
   }
@@ -62,14 +69,14 @@ class _CVViewState extends State<CVView> {
   void didUpdateWidget(CVView oldWidget) {
     super.didUpdateWidget(oldWidget);
     _bloc.add(LoadEvent(
-        page: widget.params['page'] ?? '1',
+        page: int.tryParse(widget.params['page'] ?? '1'),
         searchContent: widget.params['q'] ?? '',
         province: widget.params['province'],
         industry: widget.params['industry'],
         experience: widget.params['experience'],
         salaryFrom: int.tryParse(widget.params['salaryFrom'] ?? ''),
         salaryTo: int.tryParse(widget.params['salaryTo'] ?? ''),
-        isPropose: bool.tryParse(widget.params['propose'] ?? 'false'),
+        propose: widget.params['propose'],
         workingForm: widget.params['workingForm']
     ));
   }
@@ -97,11 +104,33 @@ class _CVViewState extends State<CVView> {
             _salaryFromController.text = widget.params['salaryFrom'] ?? '';
             _salaryToController.text = widget.params['salaryTo'] ?? '';
             workingFormSelected = widget.params['workingForm'];
+            String? proposeTem =  widget.params['propose'];
+            if(proposeTem != null) {
+              propose = int.tryParse(proposeTem);
+            }
           }
         },
         child: BlocBuilder<CVBloc, CVState>(
           builder: (context, state) {
             if(state is LoadSuccess) {
+
+              try {
+                industrySelected = state.industries.firstWhere((element) => element.name == indsutryName);
+              } catch(e) {
+                industrySelected = null;
+              }
+
+              try {
+                provinceSelected = state.provinces.firstWhere((element) => element.name == provinceName);
+              } catch(e) {
+                provinceSelected = null;
+              }
+
+              try {
+                jobSelected = state.jobs.firstWhere((element) => element.id == propose);
+              } catch(e) {
+                jobSelected = null;
+              }
               return Align(
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
@@ -165,7 +194,7 @@ class _CVViewState extends State<CVView> {
                 provinceSelected,
                 "Lọc theo tỉnh/thành phố",
                     (value) => null,
-                    (province) {provinceSelected = province;}
+                    (province) {provinceName = province == null ? null : province.name;}
             ),
           ),
           Container(
@@ -222,7 +251,9 @@ class _CVViewState extends State<CVView> {
                 ),
               ),
               onPressed: () {
-                appRouter.go('/cv/viewsearch/propose=true');
+                if (JwtPayload.role != "ROLE_employer")
+                  return showTopRightSnackBar(context, "Cần đăng nhập tài khoản nhà tuyển dụng", NotifyType.info);
+                _showMyDialog(context, state);
               },
               child: const Text("Đề xuất",
                   style: TextStyle(color: Colors.white, fontSize: 18),
@@ -404,6 +435,208 @@ class _CVViewState extends State<CVView> {
         validate == null ? Container() :
         Text(validate, style: TextStyle(fontSize: 12, color: Colors.red[900]),)
       ],
+    );
+  }
+
+  Future<void> _showMyDialog(BuildContext context, LoadSuccess state) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              content:  SingleChildScrollView(
+                child: ListBody(
+                  children: <Widget>[
+                    Text("Đề xuất", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10, bottom: 4),
+                      child: Text("Tin tuyển dụng được chọn:"),
+                    ),
+                    Container(
+                      alignment: Alignment.center,
+                      width: 600,
+                      padding: EdgeInsets.only(bottom: 10),
+                      child: buildJobChooie(setState),
+                    ),
+                    Container(height: 1,width: 600, color: Colors.blueAccent,),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10, bottom: 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text("Danh sách hồ sơ"),
+                          TextButton(
+                              onPressed: (){
+                                appRouter.go("/cu_cv");
+                              },
+                              child: Text("Thêm hồ sơ", style: TextStyle(color: Colors.indigoAccent), )
+                          )
+                        ],
+                      ),
+                    ),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: 600,
+                        maxHeight: 300,
+                      ),
+                      child: Column(
+                        children: [
+                          for(Job job in state.jobs)
+                            if(job.id == jobSelected?.id)
+                              Container()
+                            else
+                              buildJob(job, buildButtonChoose(job, setState)),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white, backgroundColor: Color.fromARGB(255, 0, 86, 143),  // This is the button color
+                  ),
+                  onPressed: () {
+                    if(jobSelected == null) {
+                      appRouter.go("/cv/viewsearch");
+                    } else {
+                      appRouter.go("/cv/viewsearch/propose=${jobSelected?.id}");
+                    }
+                    Navigator.of(context).pop();},
+                  child: const Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Text("Xác nhận",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20
+                        ),)
+                  ),
+
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget buildJobChooie(StateSetter setState) {
+    if(jobSelected == null)
+      return Text("Vui long chọn tin tuyển dụng để đề xuất",
+        style: TextStyle(color: Colors.black45),);
+    return buildJob(jobSelected!, buildButtonRemove(setState));
+  }
+
+  Widget buildJob(Job job, TextButton button) {
+    return Container(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 450),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                InkWell(
+                  onTap: () => null,
+                  child: ClipRRect(
+                      borderRadius: BorderRadius.circular(50),
+                      child: UserAvatar(
+                        imageUrl: job.employer!.avatarUrl,
+                        size: 40,
+                      )),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              InkWell(
+                                onTap: () => null,
+                                child: Text(
+                                  job.employer.name,
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w300,
+                                      color: Colors.indigo[700]),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                getTimeAgo(job.updatedAt),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[700],
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.only(top: 2, bottom: 4),
+                        child: InkWell(
+                          onTap: () => null,
+                          hoverColor: Colors.black12,
+                          child: Text(
+                            job.title,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black87,
+                            ),
+                            softWrap: true,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ),
+
+          SizedBox(
+            width: 100,
+            child: button,
+          )
+        ],
+      ),
+    );
+  }
+
+  TextButton buildButtonChoose(Job job, StateSetter setState) {
+    return TextButton(
+      style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(Color.fromARGB(255, 0, 86, 143)) ),
+      onPressed: () {
+        setState(() {
+          jobSelected = job;
+        });
+      },
+      child: Text("Chọn", style: TextStyle(color: Colors.white),),
+    );
+  }
+
+  TextButton buildButtonRemove(StateSetter setState) {
+    return TextButton(
+      style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(Colors.redAccent) ),
+      onPressed: () {
+        setState(() {
+          jobSelected = null;
+        });
+      },
+      child: Text("Hủy", style: TextStyle(color: Colors.white),),
     );
   }
 

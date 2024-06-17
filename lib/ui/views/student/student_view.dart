@@ -78,7 +78,7 @@ class _StudentViewState extends State<StudentView> {
     Navigation(
       index: 4,
       text: "Theo dõi",
-      path: "/",
+      path: "/studentFollow",
       widget: FollowView(params: widget.params,),
     ),
     Navigation(

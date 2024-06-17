@@ -35,3 +35,12 @@ class ApplicationEvent extends JobDetailEvent {
   @override
   List<Object?> get props => [data];
 }
+
+class DeleteEvent extends JobDetailEvent {
+  final int id;
+
+  const DeleteEvent({required this.id});
+
+  @override
+  List<Object?> get props => [id];
+}

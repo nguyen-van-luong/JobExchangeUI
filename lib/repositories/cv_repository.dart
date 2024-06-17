@@ -71,7 +71,13 @@ class CVRepository {
   Future<Response<dynamic>> deleteList({required List<int> ids}) async {
     dio = JwtInterceptor().addInterceptors(dio);
 
-    return dio.delete("/delete", data: jsonEncode(ids));
+    return dio.delete("/deletes", data: jsonEncode(ids));
+  }
+
+  Future<Response<dynamic>> delete({required int id}) async {
+    dio = JwtInterceptor().addInterceptors(dio);
+
+    return dio.delete("/delete", data: jsonEncode(id));
   }
 
   Future<Response<dynamic>> updatePrivate({required int id, required bool isPrivate}) async {
@@ -96,6 +102,16 @@ class CVRepository {
     param += 'page=$page&limit=${limit ?? pageSize}';
     return dio.get(
         '/propose?$param');
+  }
+
+  Future<Response<dynamic>> proposeForJob({
+    required int jobId,
+    required int page,
+    int? limit}) async {
+    String param = '';
+    param += 'page=$page&limit=${limit ?? pageSize}';
+    return dio.get(
+        '/propose/$jobId?$param');
   }
 
   Future<Response<dynamic>> searchByEmployer({

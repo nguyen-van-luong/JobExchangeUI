@@ -12,11 +12,13 @@ final class StudentsInitialState extends StudentsState {}
 
 class LoadSuccess extends StudentsState {
   final ResultCount<Student> result;
+  final List<Industry> industries;
+  final List<Province> provinces;
 
-  LoadSuccess({required this.result});
+  LoadSuccess({required this.result, required this.industries, required this.provinces});
 
   @override
-  List<Object?> get props => [result];
+  List<Object?> get props => [result, industries, provinces];
 }
 
 class LoadFailure extends StudentsState {

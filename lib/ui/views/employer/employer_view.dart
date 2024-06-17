@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:untitled1/ui/views/employer/widget/application/application_view.dart';
 import 'package:untitled1/ui/views/employer/widget/cu_job/cu_job_view.dart';
+import 'package:untitled1/ui/views/employer/widget/employer_manage/employer_manage_view.dart';
 import 'package:untitled1/ui/views/employer/widget/employer_notification/employer_notification_view.dart';
 import 'package:untitled1/ui/views/employer/widget/job_manage/job_manage_view.dart';
 import 'package:untitled1/ui/views/employer/widget/left_menu.dart';
@@ -52,8 +53,8 @@ class _EmployerViewState extends State<EmployerView> {
     Navigation(
       index: 0,
       text: "Tài khoản",
-      path: "/",
-      widget: Container(),
+      path: "/employer_manage",
+      widget: EmployerManageView(),
     ),
     Navigation(
       index: 1,

@@ -22,13 +22,14 @@ class LogoutBloc extends Bloc<LogoutEvent, LogoutState> {
     try {
       String? token = await FirebaseMessaging.instance.getToken();
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.remove('accessToken');
-      await prefs.remove('refreshToken');
       if(token != null) {
         await _fcmRepository.delete(token: token);
       }
+      await prefs.remove('accessToken');
+      await prefs.remove('refreshToken');
       emit(LoadSuccess(message: null));
     } catch (error) {
+      print(error);
       String message = "Có lỗi xảy ra. Vui lòng thử lại sau!";
       emit(Message(message: message, notifyType: NotifyType.error));
     }

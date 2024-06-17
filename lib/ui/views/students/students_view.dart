@@ -3,8 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:untitled1/ui/views/students/bloc/students_bloc.dart';
 
+import '../../../models/industry.dart';
+import '../../../models/province.dart';
 import '../../../models/student.dart';
+import '../../common/utils/widget.dart';
 import '../../router.dart';
+import '../../widgets/industry_drop_down.dart';
 import '../../widgets/notification.dart';
 import '../../widgets/pagination.dart';
 import '../../widgets/student_feed_item.dart';
@@ -22,7 +26,11 @@ class StudentsView extends StatefulWidget {
 class _StudentsViewState extends State<StudentsView> {
   late StudentsBloc _bloc;
   late int page;
-  final searchController = TextEditingController();
+  Province? provinceSelected = null;
+  Industry? industrySelected = null;
+  Industry? industryTem = null;
+  late String? indsutryName;
+  late String provinceName;
 
   @override
   void initState() {
@@ -30,7 +38,8 @@ class _StudentsViewState extends State<StudentsView> {
     _bloc = StudentsBloc()
       ..add(LoadEvent(
         page: int.tryParse(widget.params['page'] ?? '1'),
-        searchContent: widget.params['q'] ?? '',
+        province: widget.params['province'],
+        industry: widget.params['industry'],
       ));
   }
 
@@ -39,7 +48,8 @@ class _StudentsViewState extends State<StudentsView> {
     super.didUpdateWidget(oldWidget);
     _bloc.add(LoadEvent(
         page: int.tryParse(widget.params['page'] ?? '1'),
-        searchContent: widget.params['q'] ?? ''
+      province: widget.params['province'],
+      industry: widget.params['industry'],
     ));
   }
 
@@ -60,12 +70,23 @@ class _StudentsViewState extends State<StudentsView> {
             showTopRightSnackBar(context, state.message, state.notifyType);
           } else if(state is LoadSuccess) {
             page = int.parse(widget.params['page'] ?? "1");
-            searchController.text = widget.params['q'] ?? "";
+            indsutryName = widget.params['industry'] ?? "";
+            provinceName = widget.params['province'] ?? "";
           }
         },
         child: BlocBuilder<StudentsBloc, StudentsState>(
           builder: (context, state) {
             if(state is LoadSuccess) {
+              try {
+                industrySelected = state.industries.firstWhere((element) => element.name == indsutryName);
+              } catch(e) {
+                industrySelected = null;
+              }
+              try {
+                provinceSelected = state.provinces.firstWhere((element) => element.name == provinceName);
+              } catch(e) {
+                provinceSelected = null;
+              }
 
               return Align(
                 alignment: Alignment.topCenter,
@@ -104,23 +125,32 @@ class _StudentsViewState extends State<StudentsView> {
       color: Colors.white,
       padding: EdgeInsets.all(20),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(
-            child: SizedBox(
-              height: 36,
-              child: TextField(
-                style: const TextStyle(
-                    fontSize: 16.0, color: Colors.black),
-                controller: searchController,
-                decoration: const InputDecoration(
-                    contentPadding: EdgeInsets.symmetric(
-                        vertical: 0.0, horizontal: 12.0),
-                    hintText: 'Nhập từ khóa tìm kiếm...',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(
-                            Radius.circular(4)))),
+          Row(
+            children: [
+              Container(
+                margin: EdgeInsets.only(left: 40),
+                width: 200,
+                child: proviceDropDownForm(
+                    state.provinces,
+                    provinceSelected,
+                    "Lọc theo tỉnh/thành phố",
+                        (value) => null,
+                        (province) {provinceSelected = province;}
+                ),
               ),
-            ),
+              Container(
+                margin: EdgeInsets.only(left: 40),
+                width: 200,
+                child: industryDropDown(
+                    state.industries,
+                      industrySelected,
+                    "Lọc theo ngành",
+                    (value) => null,
+                    (industry) {industrySelected = industry;}),
+              ),
+            ],
           ),
           Container(
             margin: EdgeInsets.only(left: 40),
@@ -138,7 +168,8 @@ class _StudentsViewState extends State<StudentsView> {
               onPressed: () {
                 appRouter.go(getSearchQuery(
                   path: "/search_student",
-                  searchStr: searchController.text,
+                  industry: industrySelected == null ? '' : industrySelected!.name,
+                  province: provinceSelected == null ? '' : provinceSelected!.name
                 ));
               },
               child: const Text("Tìm kiếm",
@@ -191,7 +222,12 @@ class _StudentsViewState extends State<StudentsView> {
 
   String getSearchQuery({
     required path,
-    required String searchStr}) {
-    return path + "/q=$searchStr";
+    required String industry,
+    required String province}) {
+    if (industry == "Trống")
+      industry = '';
+    if (province == "Trống")
+      province = '';
+    return path + "/industry=$industry&province=$province";
   }
 }
